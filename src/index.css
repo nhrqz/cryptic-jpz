@@ -1,13 +1,96 @@
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  margin: 20px;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+ol, ul {
+  padding-left: 30px;
+}
+
+.row {
+  display: table-row;
+}
+
+.status {
+  margin-bottom: 10px;
+}
+
+.cell {
+  background: #fff;
+  border: 1px solid #bbb;
+  float: left;
+  font-size: 24px;
+  height: 60px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  width: 60px;
+  display: grid;
+}
+
+.leftWall {
+  border-left: 3px solid black;
+  width: 58px;
+}
+
+.topWall {
+  border-top: 3px solid black;
+  height: 58px;
+}
+
+.cell .number {
+  font-size: 12px;
+  padding: 4px;
+  place-self: start start;
+  grid-area: 1/1;
+}
+
+.cell .value {
+  font-size: 30px;
+  place-self: center center;
+  grid-area: 1/1;
+  width: 50px;
+  height: 50px;
+  outline: none;
+  border: none;
+  text-align: center;
+  background-color: transparent;
+  text-transform: uppercase;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.active {
+  background-color: yellow;
+}
+
+.main {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: auto 1fr;
+  gap: 100px;
+}
+
+.wordItem {
+  margin-bottom: 0.5em;
+}
+
+.wordItem .number{
+  display: inline-block;
+  width: 2em;
+}
+
+.wordItem .word{
+  display: inline-block;
+  width: 10em;
+}
+
+.wordItem .clue {
+  display: inline-block;
+  width: 30em;
+}
+
+.wordItem .clue input {
+  width: 100%;
+  font-size: 1em;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
