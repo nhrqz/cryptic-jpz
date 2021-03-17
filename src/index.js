@@ -4,6 +4,7 @@ import './index.css';
 const cx = require('classnames');
 const _ = require('lodash');
 const xmlbuilder = require('xmlbuilder');
+const he = require('he');
 
 const w = 8;
 const h = 10;
@@ -65,6 +66,7 @@ const App = () => {
   }
 
   const handleMetaInput = (newMeta) => {
+    setActive(null);
     setMeta({...meta, ...newMeta});
   }
   
@@ -77,6 +79,7 @@ const App = () => {
   const jpzHref = () => {
     if (!disableJpz()) {
       return `data:${'application/xml'};base64,${btoa(makeJPZ(grid, words, clueList, meta))}`
+      // return `data:${'application/xml'},${encodeURI(mazkeJPZ(grid, words, clueList, meta))}`
     } else {
       return '';
     }
@@ -378,40 +381,42 @@ function makeJPZ(grid, words, clues, meta) {
     'crossword-compiler-applet': {
       'rectangular-puzzle': {
         metadata: {
-          ...meta
+          title: he.encode(meta.title, {decimal: true}),
+          creator: he.encode(meta.creator, {decimal: true})
         },
-        crossword: makeGridXml(grid),
-        word: makeWordXml(words),
-        clues: makeClueXml(clues)
+        crossword: {
+          grid: makeGridXml(grid),
+          word: makeWordXml(words),
+          clues: makeClueXml(clues)
+        }
       }
     }
   }
 
-  const jpz = xmlbuilder.create(xmlObj, {encoding: 'utf-8'});
+  //
+  const jpz = xmlbuilder.create(xmlObj, {noDoubleEncoding: true});
   return jpz.end();
 }
 
 function makeGridXml(grid) {
   const gridObj = {
-    grid: {
-      '@height': `${h}`,
-      '@width': `${w}`,
-      '@one-letter-words': 'false',
-      'grid-look': { 
-        '@numbering-scheme': 'normal',
-        '@thick-border': 'true'
-      },
-      cell: grid.map((cell, index) => {
-        return {
-          '@x': `${cell.x}`,
-          '@y': `${cell.y}`,
-          '@number': cell.number,
-          '@solution': cell.value,
-          '@left-bar': cell.leftWall ? 'true' : undefined,
-          '@top-bar': cell.topWall ? 'true' : undefined,
-        }
-      })
-    }
+    '@height': `${h}`,
+    '@width': `${w}`,
+    '@one-letter-words': 'false',
+    'grid-look': { 
+      '@numbering-scheme': 'normal',
+      '@thick-border': 'true'
+    },
+    cell: grid.map((cell, index) => {
+      return {
+        '@x': `${cell.x}`,
+        '@y': `${cell.y}`,
+        '@solution': cell.value,
+        '@number': cell.number,
+        '@left-bar': cell.leftWall ? 'true' : undefined,
+        '@top-bar': cell.topWall ? 'true' : undefined,
+      }
+    })
   }
 
   return gridObj;
@@ -446,7 +451,7 @@ function makeClueXml(clues) {
         return {
           '@number': `${aClue.number}`,
           '@word': `${id + 1}`,
-          span: aClue.clue
+          span: he.encode(aClue.clue, {decimal: true})
         }
       })
     },
@@ -458,7 +463,7 @@ function makeClueXml(clues) {
         return {
           '@number': `${dClue.number}`,
           '@word': `${id + aClues.length + 1}`,
-          span: dClue.clue
+          span: he.encode(dClue.clue, {decimal: true})
         }
       })
     }

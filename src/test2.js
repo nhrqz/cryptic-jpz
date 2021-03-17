@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const state = require('./state.json');
 const xmlbuilder = require('xmlbuilder');
+const he = require('he');
 
 const w = 8;
 const h = 10;
@@ -98,4 +99,18 @@ function makeClueXml(clues) {
   return cluesObj;
 }
 
-console.log(makeJPZ(state))
+
+const testObj = {
+  clue: {
+    '@potato': 'foo',
+    span: he.encode('aba & a a ¬˚∆∂©©˙˚∆ç∫¬∆', {decimal: true}),
+    data: '&#38;slkjsdf  slkjd '
+  }
+}
+// console.log(makeJPZ(state))
+console.log(testObj);
+console.log(xmlbuilder
+  .create(testObj, {encoding: 'UTF-8', noDoubleEncoding: true})
+  .end({pretty: 'true'})
+  // .replace(/&amp;/g, '&')
+);
