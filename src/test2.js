@@ -88,7 +88,7 @@ function makeClueXml(clues) {
       clue: dClues.map((dClue, id) => {
         return {
           '@number': `${dClue.number}`,
-          '@word': `${id + aClues.length}`,
+          '@word': `${id + aClues.length + 1}`,
           span: dClue.clue
         }
       })

@@ -57,11 +57,11 @@ const App = () => {
     setClueList(stripClueList(clueList, nWords));
   }
 
-  const handleClueInput = ({clue, address}, clueList) => {
+  const handleClueInput = (newClue, clueList) => {
     setActive(null);
     const nClueList = clueList.slice();
-    _.remove(nClueList, ['address', address]);
-    setClueList([...nClueList, {clue, address}]);
+    _.remove(nClueList, ['address', newClue.address]);
+    setClueList([...nClueList, newClue]);
   }
 
   const handleMetaInput = (newMeta) => {
@@ -69,7 +69,8 @@ const App = () => {
   }
   
   const disableJpz = () => {
-    return clueList.map(x => x.clue).includes('') || grid.map(y => y.value).includes('');
+    return (clueList.map(x => x.clue).includes('') || grid.map(y => y.value).includes('')) 
+      || !(clueList.length === words.across.length + words.down.length);
     // return true;
   }
 
@@ -186,6 +187,8 @@ const WordList = (props) => {
                 onClueInput={(value) => props.onClueInput({
                   clue: value, 
                   address: `${word.number}A`,
+                  number: word.number,
+                  isAcross: true
                 })} 
               />
             )
@@ -200,7 +203,9 @@ const WordList = (props) => {
               <WordItem {...word} 
                 onClueInput={(value) => props.onClueInput({
                   clue: value, 
-                  address: `${word.number}D`
+                  address: `${word.number}D`,
+                  number: word.number,
+                  isAcross: false
                 })} 
               />
             )
@@ -452,7 +457,7 @@ function makeClueXml(clues) {
       clue: dClues.map((dClue, id) => {
         return {
           '@number': `${dClue.number}`,
-          '@word': `${id + aClues.length}`,
+          '@word': `${id + aClues.length + 1}`,
           span: dClue.clue
         }
       })
