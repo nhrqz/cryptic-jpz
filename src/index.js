@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 const cx = require('classnames');
 const _ = require('lodash');
+const xmlbuilder = require('xmlbuilder');
 
 const w = 8;
 const h = 10;
@@ -22,6 +23,7 @@ const App = () => {
   const [active, setActive] = useState(initialActive);
   const [words, setWords] = useState(initialWords);
   const [clueList, setClueList] = useState(initialClues);
+  const [meta, setMeta] = useState({title: '', creator: ''});
 
   const handleClick = (i) => {
     setActive(i);
@@ -61,9 +63,23 @@ const App = () => {
     _.remove(nClueList, ['address', address]);
     setClueList([...nClueList, {clue, address}]);
   }
-  // useEffect(() => {
 
-  // })
+  const handleMetaInput = (newMeta) => {
+    setMeta({...meta, ...newMeta});
+  }
+  
+  const disableJpz = () => {
+    return clueList.map(x => x.clue).includes('') || grid.map(y => y.value).includes('');
+    // return true;
+  }
+
+  const jpzHref = () => {
+    if (!disableJpz()) {
+      return `data:${'application/xml'};base64,${btoa(makeJPZ(grid, words, clueList, meta))}`
+    } else {
+      return '';
+    }
+  }
 
   return (
     <div className='main'>
@@ -82,9 +98,21 @@ const App = () => {
           Toggle Top Wall
         </button>
       </div>
-      <WordList {...words} 
-        onClueInput={(clue) => handleClueInput(clue, clueList)}
-      />
+      <div>
+        <MetaInput onMetaInput={(meta) => handleMetaInput(meta)}/> 
+        <WordList {...words} 
+          onClueInput={(clue) => handleClueInput(clue, clueList)}
+        />
+        <a 
+          href={jpzHref()}
+          download={`${meta.title}.jpz`}
+        >
+          <button 
+          disabled={disableJpz()}
+            // onClick={console.log(JSON.stringify({ grid, words, clueList, meta}))}
+          >Download JPZ</button>
+        </a>
+      </div>
     </div>
   )
 }
@@ -184,6 +212,27 @@ const WordList = (props) => {
   )
 }
 
+const MetaInput = (props) => {
+  return (
+    <div>
+      <div className="title">
+        <input
+          type="text"
+          placeholder="title"
+          onInput={e => props.onMetaInput({title: e.target.value})}
+        />
+      </div>
+      <div className="creator">
+        <input
+          type="text"
+          placeholder="Creator"
+          onInput={e => props.onMetaInput({creator: e.target.value})}
+        />
+      </div>
+    </div>
+  )
+}
+
 const WordItem = (props) => {
   return (
     <div className="wordItem">
@@ -204,6 +253,11 @@ function numberGrid(grid) {
   let n = 1;
   for (let i=0; i < grid.length; i++) {
     const self = grid[i];
+
+    self.index = i; 
+    self.x = (i % w) + 1;
+    self.y = Math.floor(i / w) + 1;
+
     const north = i < w          ? null : grid[i - w];
     const south = i > (w * h-1)  ? null : grid[i + w];
     const west = (i % w === 0)   ? null : grid[i-1];
@@ -266,13 +320,28 @@ function makeWordsFromGrid(grid) {
 function makeWordsFromCells(cells) {
   return {
     number: cells[0].number || '-',
-    word: cells.map(cell => cell.value ? cell.value : '_').join('')
+    word: cells.map(cell => cell.value ? cell.value : '_').join(''),
+    cells: cells.map(({x, y}) => ({x, y}))
   }
 }
 
 function makeClueList({across, down}) {
-  const aClues = across.map(word => ({address: `${word.number}A`, clue: ''}));
-  const dClues = down.map(word => ({address: `${word.number}D`, clue: ''}));
+  const aClues = across.map(word => {
+    return {
+      address: `${word.number}A`, 
+      clue: '',
+      number: word.number,
+      isAcross: true
+    }
+  });
+  const dClues = down.map(word => {
+    return {
+      address: `${word.number}D`,
+      clue: '',
+      number: word.number,
+      isAcross: false
+    }
+  });
   return _.concat(aClues, dClues);
 }
 
@@ -295,3 +364,100 @@ ReactDOM.render(
   <App />,
   document.getElementById('root')
 );
+
+
+// make JPZ xml
+
+function makeJPZ(grid, words, clues, meta) {
+  const xmlObj = {
+    'crossword-compiler-applet': {
+      'rectangular-puzzle': {
+        metadata: {
+          ...meta
+        },
+        crossword: makeGridXml(grid),
+        word: makeWordXml(words),
+        clues: makeClueXml(clues)
+      }
+    }
+  }
+
+  const jpz = xmlbuilder.create(xmlObj, {encoding: 'utf-8'});
+  return jpz.end();
+}
+
+function makeGridXml(grid) {
+  const gridObj = {
+    grid: {
+      '@height': `${h}`,
+      '@width': `${w}`,
+      '@one-letter-words': 'false',
+      'grid-look': { 
+        '@numbering-scheme': 'normal',
+        '@thick-border': 'true'
+      },
+      cell: grid.map((cell, index) => {
+        return {
+          '@x': `${cell.x}`,
+          '@y': `${cell.y}`,
+          '@number': cell.number,
+          '@solution': cell.value,
+          '@left-bar': cell.leftWall ? 'true' : undefined,
+          '@top-bar': cell.topWall ? 'true' : undefined,
+        }
+      })
+    }
+  }
+
+  return gridObj;
+}
+
+function makeWordXml(words) {
+  const allWords = [...words.across, ...words.down];
+  const wordObj = allWords.map((word, id) => {
+    return {
+      '@id': `${id + 1}`,
+      cells: word.cells.map(cell => {
+        return {
+          '@x': `${cell.x}`,
+          '@y': `${cell.y}`
+        }
+      })
+    }
+  });
+  return wordObj;
+}
+
+
+function makeClueXml(clues) {
+  const aClues = _.sortBy(_.filter(clues, 'isAcross'), 'number');
+  const dClues = _.sortBy(_.filter(clues, ['isAcross', false]), 'number');
+  const cluesObj = [
+    {
+      title: {
+        b: 'Across'
+      },
+      clue: aClues.map((aClue, id) => {
+        return {
+          '@number': `${aClue.number}`,
+          '@word': `${id + 1}`,
+          span: aClue.clue
+        }
+      })
+    },
+    {
+      title: {
+        b: 'Down'
+      },
+      clue: dClues.map((dClue, id) => {
+        return {
+          '@number': `${dClue.number}`,
+          '@word': `${id + aClues.length}`,
+          span: dClue.clue
+        }
+      })
+    }
+  ];
+
+  return cluesObj;
+}
