@@ -1,3 +1,5 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min';
 import React, {useState, useRef} from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
@@ -86,41 +88,100 @@ const App = () => {
   }
 
   return (
-    <div className='main'>
-      <div>
-        <Grid 
-          cells={grid} 
-          active={active}
-          onClick={i => handleClick(i)} 
-          onInput={(i, val) => handleInput(i, val, grid)} 
-          w={w} h={h}
-        />
-        <button onClick={() => markLeftWall(active, grid, clueList)} disabled={active % w === 0}>
-          Toggle Left Wall
-        </button>
-        <button onClick={() => markTopWall(active, grid, clueList)} disabled={!(active >= w)}>
-          Toggle Top Wall
-        </button>
+    <>
+      <div className={cx('container-fluid')}>
+        <div className={cx('row')}>
+          <div className={cx('col-5')}>
+            <div className={cx('d-flex', 'justify-content-center', 'sticky-top')}>
+              <div className={cx('py-4')}>
+                <Grid 
+                  cells={grid} 
+                  active={active}
+                  onClick={i => handleClick(i)} 
+                  onInput={(i, val) => handleInput(i, val, grid)} 
+                  w={w} h={h}
+                />
+                <div className={cx('mt-3')}>
+                  <button 
+                    onClick={() => markLeftWall(active, grid, clueList)} 
+                    disabled={active % w === 0}
+                    type='button'
+                    className={cx('btn', 'btn-secondary', 'me-2')}
+                  >
+                    Toggle Left Wall
+                  </button>
+                  <button 
+                    onClick={() => markTopWall(active, grid, clueList)} 
+                    disabled={!(active >= w)}
+                    type='button'
+                    className={cx('btn', 'btn-secondary')}
+                  >
+                    Toggle Top Wall
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div 
+            className={cx('col-7', 'row', 'gy-4', 'mb-5')}
+          >
+            <MetaInput onMetaInput={(meta) => handleMetaInput(meta)}/> 
+            <WordList {...words} 
+              onClueInput={(clue) => handleClueInput(clue, clueList)}
+            />
+            <a 
+              className='d-grid'
+              href={jpzHref()}
+              download={`${meta.title}.jpz`}
+            >
+              <button 
+              disabled={disableJpz()}
+              className={cx('btn', 'btn-lg', 'btn-primary')}
+                // onClick={console.log(JSON.stringify({ grid, words, clueList, meta}))}
+              >Download JPZ</button>
+            </a>
+          </div>
+        </div>
       </div>
-      <div>
-        <MetaInput onMetaInput={(meta) => handleMetaInput(meta)}/> 
-        <WordList {...words} 
-          onClueInput={(clue) => handleClueInput(clue, clueList)}
-        />
-        <a 
-          href={jpzHref()}
-          download={`${meta.title}.jpz`}
-        >
+      <Explainer/>
+    </>
+  )
+}
+
+const Explainer = () => {
+  return (
+    <div 
+      className={cx('offcanvas', 'offcanvas-bottom', 'show')}
+      tabIndex="-1" 
+      id="offcanvas" 
+      // aria-labelledby="offcanvasLabel" 
+      data-bs-backdrop="true" 
+      data-bs-scroll="true"
+    >
+      <div className={cx('p-3')}>
+        <div className="offcanvas-header">
+          <h3 className="offcanvas-title" id="offcanvasLabel">
+            TNY-Style Cryptic Crossword JPZ Generator
+          </h3>
           <button 
-          disabled={disableJpz()}
-            // onClick={console.log(JSON.stringify({ grid, words, clueList, meta}))}
-          >Download JPZ</button>
-        </a>
+            type="button" 
+            className="btn-close text-reset" 
+            data-bs-dismiss="offcanvas" 
+            aria-label="Close" 
+          />
+        </div>
+        <div className="offcanvas-body">
+          <p><b>How to use:</b></p>
+          <ol>
+            <li>Add letters and walls to the grid.</li>
+            <li>Add a clue for each word. (Don’t forget to use smart quotes and include enumerations!)</li>
+            <li>Download your JPZ file!</li>
+          </ol>
+        </div>
       </div>
     </div>
   )
 }
-
 
 const Grid = (props) => {
   // const nCells = numberGrid(props.cells);
@@ -130,7 +191,7 @@ const Grid = (props) => {
       {
         rows.map((row, i) => {
           return (
-            <div className='row'>
+            <div className='grid-row'>
               {
                 row.map((cell, j) => {
                   const nx = i * w + j;
@@ -180,9 +241,9 @@ const Cell = (props) => {
 
 const WordList = (props) => {
   return (
-    <div>
-      <div>
-        <h3>Across</h3>
+    <div className={cx()}>
+      <div className={cx('mb-4')}>
+        <h3 className={cx('mb-3')}>Across</h3>
         {
           props.across.map(word => {
             return (
@@ -198,8 +259,8 @@ const WordList = (props) => {
           })
         }
       </div>
-      <div>
-        <h3>Down</h3>
+      <div className={cx('mb-4')}>
+        <h3 className={cx('mb-3')}>Down</h3>
         {
           props.down.map(word => {
             return (
@@ -222,34 +283,41 @@ const WordList = (props) => {
 
 const MetaInput = (props) => {
   return (
-    <div>
-      <div className="title">
-        <input
-          type="text"
-          placeholder="title"
-          onInput={e => props.onMetaInput({title: e.target.value})}
-        />
+    <>
+      <div className={cx('row', 'mb-2')}>
+        <div className={cx('col-6')}>
+          <input
+            type="text"
+            placeholder="Title"
+            className={cx('form-control', 'form-control-lg')}
+            onInput={e => props.onMetaInput({title: e.target.value})}
+          />
+        </div>
       </div>
-      <div className="creator">
-        <input
-          type="text"
-          placeholder="Creator"
-          onInput={e => props.onMetaInput({creator: e.target.value})}
-        />
+      <div className={cx('row')}>
+        <div className={cx('col-4')}>
+          <input
+            type="text"
+            placeholder="Creator"
+            className={cx('form-control')}
+            onInput={e => props.onMetaInput({creator: e.target.value})}
+          />
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
 const WordItem = (props) => {
   return (
-    <div className="wordItem">
-      <div className="number">{props.number}</div>
-      <div className="word">{props.word}</div>
-      <div className="clue">
+    <div className={cx('row', 'mb-1')}>
+      <div className={cx('wi-number')}>{props.number}</div>
+      <div className={cx('col')}>{props.word}</div>
+      <div className={cx('col-9')}>
         <input 
           type="text" 
-          placeholder="Clue here"
+          placeholder={`Clue (${props.word.length})`}
+          className={cx('form-control')}
           onInput={e => props.onClueInput(e.target.value)}
         />
       </div>
