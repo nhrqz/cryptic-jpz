@@ -83,7 +83,7 @@ const App = () => {
       return `data:${'application/xml'};base64,${btoa(makeJPZ(grid, words, clueList, meta))}`
       // return `data:${'application/xml'},${encodeURI(mazkeJPZ(grid, words, clueList, meta))}`
     } else {
-      return '';
+      return undefined;
     }
   }
 
